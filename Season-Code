@@ -1,0 +1,970 @@
+#Based on Survivor CBS television show
+#Code written by Nathan Miller with code inspired by and from Anthony Amadeo's original mock Survivor season code
+#Two Worlds twist (heard by Nathan from) Brian Long
+#Other twists such as Survivor Casino and Token Challenges by Nathan Miller
+
+import random
+import time
+import os.path
+players = []
+og_tribe1 = []
+og_tribe2 = []
+og_tribe3 = []
+og_tribe4 = []
+messup = 0
+merged_tribe = []
+jury = []
+tokens = {}
+tokens2 = {}
+challenge_wins = {}
+votes_against = {}
+jury_votes = {}
+test_counter = 0
+bootlist = []
+token_num = 1
+counter = 0
+wins = 0
+votes = 0
+tok_count = 0
+casino_adv = False
+casino_disadv = False
+token_ch_disadv = False
+no_will = False
+cast = int(input("How many players do you want in the game?"))
+menu = {"idol": 4, "locket": 2, "vote steal": 2, "ch. advantage": 3, "willop": 5, "50/50 coin": 4, "extra life": 6}
+swaptype = ["Len", "Equal"]
+
+print("Welcome to Survivor: Two Worlds.")
+
+time.sleep(1)
+
+print("For the first group of castaways.")
+for castaways in range(int(cast/2)):
+    name = input("Please name your castaway.")
+    if name in players:
+        while True:
+            name = input("Please name your castaway (A DIFFERENT NAME THAN ALREADY SUBMITTED).")
+            if name not in players:
+                break
+    tribe_choice = int(input("What tribe do you want them on (type 1 or 2)?"))
+    if tribe_choice > 2:
+        while True:
+            tribe_choice = int(input("Please pick 1 or 2."))
+            if tribe_choice <= 2:
+                break
+    players.append(name)
+    if tribe_choice == 1:
+        og_tribe1.append(name)
+        print(og_tribe1)
+    elif tribe_choice == 2:
+        og_tribe2.append(name)
+        print(og_tribe2)
+    tokens[name] = token_num
+    challenge_wins[name] = wins
+    votes_against[name] = votes
+
+time.sleep(1)
+print("\n")
+print(og_tribe1)
+og_tribe1_name = input("What is this tribe's name?")
+time.sleep(1)
+print(og_tribe2)
+og_tribe2_name = input("What is this tribe's name?")
+tribes = [og_tribe1_name, og_tribe2_name]
+
+time.sleep(1)
+print("For the second group of castaways.")
+for castaways in range(int(cast/2)):
+    name = input("Please name your castaway.")
+    if name in players:
+        while True:
+            name = input("Please name your castaway (A DIFFERENT NAME THAN ALREADY SUBMITTED).")
+            if name not in players:
+                break
+    tribe_choice = int(input("What tribe do you want them on (type 1 or 2)?"))
+    if tribe_choice > 2:
+        while True:
+            tribe_choice = int(input("Please pick 1 or 2."))
+            if tribe_choice <= 2:
+                break
+    players.append(name)
+    if tribe_choice == 1:
+        og_tribe3.append(name)
+        print(og_tribe3)
+    elif tribe_choice == 2:
+        og_tribe4.append(name)
+        print(og_tribe4)
+    tokens2[name] = token_num
+    challenge_wins[name] = wins
+    votes_against[name] = votes
+
+time.sleep(1)
+print("\n")
+print(og_tribe3)
+og_tribe3_name = input("What is this tribe's name?")
+time.sleep(1)
+print(og_tribe4)
+og_tribe4_name = input("What is this tribe's name?")
+tribes2 = [og_tribe3_name, og_tribe4_name]
+
+
+def boot_list():
+    global bootlist
+    print('')
+    print('Bootlist:')
+    for x in range(0, len(bootlist)):
+        print(str(x+1) + '-th person voted out:', bootlist[x])
+    return
+
+
+def pre_merge(tribe1, tribe2, tribe1name, tribe2name, tribelist, tokenlist):
+    global counter
+    global tok_count
+    print("The tribes are as follows:")
+    print(tribe1name + ":")
+    for each in tribe1:
+        print(each)
+    print("\n")
+    print(tribe2name + ":")
+    for all in tribe2:
+        print(all)
+    print("\n")
+    print("And now for today's immunity challenge!")
+    ch_winner = random.choice(tribelist)
+    print(ch_winner, "wins immunity!")
+    print(tokenlist)
+    token_help = input("Any token usage today? (type 'yes' or 'no' specifically.")
+    if token_help == "yes":
+        while True:
+            print(tokenlist)
+            choice = input("Type 'give' if someone is giving someone else tokens; 'challenge' if someone volunteered to compete in a token challenge; 'casino' if someone wants to enter the Survivor Casino; \n 'purchase' if someone is purchasing an item with fire tokens; or 'done' if you're finished with token usage for the day.")
+            if choice == "give":
+                name = input("Who is giving tokens?")
+                if name not in tokenlist:
+                    while True:
+                        name = input("Who is actually giving tokens?")
+                        if name in tokenlist:
+                            break
+                much = int(input("How many tokens are being given?"))
+                amount = tokenlist[name]
+                if much > amount:
+                    print("Can't afford that.")
+                else:
+                    giving = input("Who are they giving tokens to?")
+                    if giving not in tokenlist:
+                        while True:
+                            giving = input("Who are they actually giving tokens to?")
+                            if giving in tokenlist:
+                                break
+                    tokenlist[name] -= much
+                    tokenlist[giving] += much
+            elif choice == "challenge":
+                if tok_count != 1:
+                    challengers = []
+                    num = int(input("How many players will be competing?"))
+                    for competitors in range(num):
+                        name = input("Who shall be competing?")
+                        if name not in tokenlist:
+                            while True:
+                                name = input("Who is actually competing?")
+                                if name in tokenlist:
+                                    break
+                        challengers.append(name)
+                    print("The winner shall receive a fire token. Loser(s) will lose a fire token. If the loser has no tokens, they will earn a vote at their next tribal council.")
+                    win = random.choice(challengers)
+                    print(win, "has won a fire token!")
+                    tokenlist[win] += 1
+                    challengers.remove(win)
+                    for losers in challengers:
+                        if tokenlist[losers] != 0:
+                            tokenlist[losers] -= 1
+                        else:
+                            print(losers, "has no tokens to lose. Therefore, they will earn a vote at their next tribal council.")
+                    tok_count += 1
+                else:
+                    print("Sorry, no more token challenges today.")
+            elif choice == "purchase":
+                name = input("Who is buying?")
+                if name not in tokenlist:
+                    while True:
+                        name = input("Who is actually buying?")
+                        if name in tokenlist:
+                            break
+                print(menu)
+                using = input("What are they buying? Please type the item spelled exactly as it appears on the menu.")
+                price = menu[using]
+                have = tokenlist[name]
+                if price > have:
+                    print("Can't afford that.")
+                else:
+                    print("It's a purchase!")
+                    tokenlist[name] -= price
+            elif choice == "casino":
+                if counter != 1:
+                    s_rate = ["Yes"]
+                    risk_taker = input("Who made the first move and decided to take a chance, entering the Survivor Casino?")
+                    if risk_taker not in tokenlist:
+                        while True:
+                            risk_taker = input("Who actually entered the Casino?")
+                            if risk_taker in tokenlist:
+                                break
+                    print(risk_taker, "has entered the Survivor Casino. The way this works is simple. Place a bet of fire tokens. You win, you earn that amount. You lose, lose your bet. Very simple.\n"
+                                      "If you want to try, place your bet. If not, type 0 and you won't bet a thing. The higher you bet, the higher the risk.")
+                    bet = int(input("What is your bet?"))
+                    amount = tokenlist[risk_taker]
+                    if bet > amount:
+                        print("Can't afford that.")
+                    else:
+                        for chance in range(bet):
+                            s_rate.append("No")
+                        game = random.choice(s_rate)
+                        if game == "Yes":
+                            print("Congrats, you win", bet, "tokens!")
+                            tokenlist[risk_taker] += bet
+                        elif game == "No":
+                            print("The risk has failed, you lose", bet, "tokens.")
+                            tokenlist[risk_taker] -= bet
+                    counter += 1
+                else:
+                    print("Sorry, the casino has been used today.")
+            elif choice == "done":
+                break
+
+    print("Welcome to Tribal Council.")
+    if ch_winner == tribe1name:
+        print(tribe2)
+    elif ch_winner == tribe2name:
+        print(tribe1)
+    vote_forfeit = input("Would anyone like to give up their vote for a token?")
+    if vote_forfeit == "yes":
+        vote_for_num = int(input("How many?"))
+        for givers in range(vote_for_num):
+            forfeitter = input("Write the name of the person giving up their vote. 'Specifically how it was written originally' ")
+            tokenlist[forfeitter] += 1
+    voters = int(input("How many people are voting?"))
+
+    tallies = []
+    vote_freq = {}
+    idols = []
+
+    idol = input("Did anyone get the idol?")
+    if idol == "yes":
+        num = int(input("How many people?"))
+        for idol in range(num):
+            receiver = input("Enter the name.")
+            idols.append(receiver)
+
+    for votes in range(voters):
+        vote = input("Write the name of the person you will vote out. 'Specifically how it was written originally' ")
+        if vote not in tokenlist:
+            while True:
+                vote = input("Write the actual name.")
+                if vote in tokenlist:
+                    break
+        tallies.append(vote)
+
+    for choices in tallies:
+        if vote_freq.get(choices) == None:
+            vote_freq[choices] = 1
+        else:
+            vote_freq[choices] += 1
+
+    print(tallies)
+    print(vote_freq)
+
+    p_bootee = max(vote_freq, key=vote_freq.get)
+    if p_bootee in idols:
+        while True:
+            print("Any votes against", p_bootee, "will not count.")
+            del vote_freq[p_bootee]
+            idols.remove(p_bootee)
+            p_bootee = max(vote_freq, key=vote_freq.get)
+            if p_bootee not in idols:
+                break
+
+    print(vote_freq)
+    for ones in vote_freq:
+        votes_against[ones] += vote_freq[ones]
+    tie = []
+    for people in vote_freq:
+        if vote_freq[people] == vote_freq[p_bootee]:
+            tie.append(people)
+
+    if len(tie) > 1:
+        print("We have a tie.")
+        if len(tie) == 2:
+            tiebreaker = input("How do we want to break this? (rocks, fire, revote)")
+            if tiebreaker == "fire":
+                if len(tie) > 2:
+                    print("You can't do fire, you have more than two players in the tie.")
+                elif len(tie) == 2:
+                    print("Very well, the two of you shall do a trial by fire, first one to burn the rope wins.")
+                    fire_break = random.choice(tie)
+                    print(fire_break, "stays in the game.")
+                    tie.remove(fire_break)
+                    for other in tie:
+                        p_bootee = other
+        elif len(tie) > 2:
+            tiebreaker = input("How do we want to break this? (rocks or revote)")
+        if tiebreaker == "revote":
+            tallies = []
+            vote_freq = {}
+            voters = voters - len(tie)
+            for votes in range(voters):
+                vote = input("Write the name of the person you will vote out.")
+                if vote not in tokenlist:
+                    while True:
+                        vote = input("Write the name of their actual vote!")
+                        if vote in tokenlist:
+                            break
+                tallies.append(vote)
+
+            for choices in tallies:
+                if vote_freq.get(choices) == None:
+                    vote_freq[choices] = 1
+                else:
+                    vote_freq[choices] += 1
+
+            print(vote_freq)
+            p_bootee = max(vote_freq, key=vote_freq.get)
+
+            tie = []
+            for people in vote_freq:
+                if vote_freq[people] == vote_freq[p_bootee]:
+                    tie.append(people)
+
+            if len(tie) > 1:
+                print("And we're deadlocked.")
+                if len(tie) == 2:
+                    tiebreaker = input("Rocks or fire?")
+                    if tiebreaker == "rocks":
+                        vulnerable = []
+                        if ch_winner == tribe1name:
+                            for thegamers in tribe2:
+                                vulnerable.append(thegamers)
+                        elif ch_winner == tribe2name:
+                            for thegamers in tribe1:
+                                vulnerable.append(thegamers)
+                        immune = input("Is someone immune?")
+                        if immune == "yes":
+                            immunity_winner = input("Who won immunity?")
+                            if immunity_winner not in tokenlist:
+                                while True:
+                                    immunity_winner = input("Who actually won immunity?")
+                                    if immunity_winner in tokenlist:
+                                        break
+                            vulnerable.remove(immunity_winner)
+                        for tied_up in tie:
+                            vulnerable.remove(tied_up)
+
+                        p_bootee = random.choice(vulnerable)
+                        print(p_bootee, "you've picked the purple rock.")
+                    elif tiebreaker == "fire":
+                        print("Very well, the two of you shall do a trial by fire, first one to burn the rope wins.")
+                        fire_break = random.choice(tie)
+                        print(fire_break, "stays in the game.")
+                        tie.remove(fire_break)
+                        for other in tie:
+                            p_bootee = other
+                elif len(tie) > 2:
+                    vulnerable = []
+                    if ch_winner == tribe1name:
+                        for thegamers in tribe2:
+                            vulnerable.append(thegamers)
+                    elif ch_winner == tribe2name:
+                        for thegamers in tribe1:
+                            vulnerable.append(thegamers)
+                    immune = input("Is someone immune?")
+                    if immune == "yes":
+                        immunity_winner = input("Who won immunity?")
+                        if immunity_winner not in tokenlist:
+                            while True:
+                                immunity_winner = input("Who actually won immunity?")
+                                if immunity_winner in tokenlist:
+                                    break
+                        vulnerable.remove(immunity_winner)
+                    for tied_up in tie:
+                        vulnerable.remove(tied_up)
+
+                    p_bootee = random.choice(vulnerable)
+                    print(p_bootee, "you've picked the purple rock.")
+        elif tiebreaker == "rocks":
+            vulnerable = []
+            if ch_winner == tribe1name:
+                for thegamers in tribe2:
+                    vulnerable.append(thegamers)
+            elif ch_winner == tribe2name:
+                for thegamers in tribe1:
+                    vulnerable.append(thegamers)
+            immune = input("Is someone immune?")
+            if immune == "yes":
+                immunity_winner = input("Who won immunity?")
+                if immunity_winner not in tokenlist:
+                    while True:
+                        immunity_winner = input("Who actually won immunity?")
+                        if immunity_winner in tokenlist:
+                            break
+                vulnerable.remove(immunity_winner)
+            for tied_up in tie:
+                vulnerable.remove(tied_up)
+
+            p_bootee = random.choice(vulnerable)
+            print(p_bootee, "you've picked the purple rock.")
+
+    print(p_bootee + ",", "the tribe has spoken.")
+    players.remove(p_bootee)
+    if p_bootee in tribe1:
+        tribe1.remove(p_bootee)
+    elif p_bootee in tribe2:
+        tribe2.remove(p_bootee)
+
+    will_num = tokenlist[p_bootee]
+    tokenlist[p_bootee] -= will_num
+    bootlist.append(p_bootee)
+    del tokenlist[p_bootee]
+    print(tokenlist)
+    will = input("Who is the boot willing tokens to? 'Write it specifically how it was written originally'")
+    if will not in tokenlist:
+        while True:
+            will = input("Who are they actually willing tokens to?")
+            if will in tokenlist:
+                break
+    tokenlist[will] += will_num
+    counter = 0
+    tok_count = 0
+
+
+def swap(tribe1, tribe2, tokenlist):
+    global swaptype
+    if (len(tokenlist) % 2) == 0:
+        type = random.choice(swaptype)
+        swappers = []
+        if type == "Len":
+            init1 = len(tribe1)
+            init2 = len(tribe2)
+            for each in tribe1:
+                swappers.append(each)
+            for all in tribe2:
+                swappers.append(all)
+            for each2 in range(init1):
+                new_mem = random.choice(swappers)
+                swappers.remove(new_mem)
+                if new_mem not in tribe1:
+                    tribe2.remove(new_mem)
+                    tribe1.append(new_mem)
+            for all2 in range(init2):
+                new_mem = random.choice(swappers)
+                swappers.remove(new_mem)
+                if new_mem not in tribe2:
+                    tribe1.remove(new_mem)
+                    tribe2.append(new_mem)
+        elif type == "Equal":
+            swapped = []
+            for each in tribe1:
+                swapped.append(each)
+                tribe1.remove(each)
+            for all in tribe2:
+                swapped.append(all)
+                tribe2.remove(all)
+            for twist in range(int((len(swapped))/2)):
+                picked = random.choice(swapped)
+                tribe1.append(picked)
+                swapped.remove(picked)
+            for twist2 in range(len(swapped)):
+                picked = random.choice(swapped)
+                tribe2.append(picked)
+                swapped.remove(picked)
+    else:
+        swappers = []
+        init1 = len(tribe1)
+        init2 = len(tribe2)
+        for each in tribe1:
+            swappers.append(each)
+        for all in tribe2:
+            swappers.append(all)
+        for each2 in range(init1):
+            new_mem = random.choice(swappers)
+            swappers.remove(new_mem)
+            if new_mem not in tribe1:
+                tribe2.remove(new_mem)
+                tribe1.append(new_mem)
+        for all2 in range(init2):
+            new_mem = random.choice(swappers)
+            swappers.remove(new_mem)
+            if new_mem not in tribe2:
+                tribe1.remove(new_mem)
+                tribe2.append(new_mem)
+
+
+def merge():
+    global counter
+    global tok_count
+    global messup
+    if messup < 1:
+        q_new = input("Did you mess up?")
+        if q_new == "yes":
+            messup = 1
+            booted_prev = int(input("How many were booted previously (pre-merge)?"))
+            for thebooted in range(booted_prev):
+                boot = input("Please type their name.")
+                bootlist.append(boot)
+            jury_num = int(input("Jury num?"))
+            for num in range(jury_num):
+                jury_mem = input("Please type all juror names.")
+                bootlist.append(jury_mem)
+                jury.append(jury_mem)
+                if jury_mem in merged_tribe:
+                    merged_tribe.remove(jury_mem)
+                    del tokens[jury_mem]
+            for them in merged_tribe:
+                print(them, "How many tokens?")
+                question = int(input("How many?"))
+                tokens[them] = question
+    print("The tribes are as follows:")
+    print(str((merged_tribe_name + ":")))
+    print("\n")
+    for them in merged_tribe:
+        print(them)
+    print("And now for today's immunity challenge!")
+    ch_winner = random.choice(merged_tribe)
+    print(ch_winner, "wins immunity!")
+    tokens[ch_winner] += 1
+    challenge_wins[ch_winner] += 1
+
+    print(tokens)
+    token_help = input("Any token usage today? Specifically type 'yes' or 'no' ")
+    if token_help == "yes":
+        while True:
+            print(tokens)
+            choice = input("Type 'give' if someone is giving someone else tokens; 'challenge' if someone volunteered to compete in a token challenge; 'casino' if someone wants to enter the Survivor Casino; \n 'purchase' if someone is purchasing an item with fire tokens; or 'done' if you're finished with token usage for the day.")
+            if choice == "give":
+                name = input("Who is giving tokens?")
+                if name not in tokens:
+                    while True:
+                        name = input("Who is actually giving tokens?")
+                        if name in tokens:
+                            break
+                much = int(input("How many tokens are being given?"))
+                amount = tokens[name]
+                if much > amount:
+                    print("Can't afford that.")
+                else:
+                    giving = input("Who are they giving tokens to?")
+                    if giving not in tokens:
+                        while True:
+                            giving = input("Who are they actually giving tokens to?")
+                            if giving in tokens:
+                                break
+                    tokens[name] -= much
+                    tokens[giving] += much
+            elif choice == "challenge":
+                if tok_count != 1:
+                    challengers = []
+                    num = int(input("How many players will be competing?"))
+                    for competitors in range(num):
+                        name = input("Who shall be competing?")
+                        if name not in tokens:
+                            while True:
+                                name = input("Who is actually competing?")
+                                if name in tokens:
+                                    break
+                        challengers.append(name)
+                    print("The winner shall receive a fire token. Loser(s) will lose a fire token. If the loser has no tokens, they will earn a vote at their next tribal council.")
+                    win = random.choice(challengers)
+                    print(win, "has won a fire token!")
+                    tokens[win] += 1
+                    challengers.remove(win)
+                    for losers in challengers:
+                        if tokens[losers] != 0:
+                            tokens[losers] -= 1
+                        else:
+                            print(losers, "has no tokens to lose. Therefore, they will earn a vote at their next tribal council.")
+                    tok_count += 1
+                else:
+                    print("Sorry, no more token challenges today.")
+            elif choice == "purchase":
+                name = input("Who is buying?")
+                if name not in tokens:
+                    while True:
+                        name = input("Who is actually buying?")
+                        if name in tokens:
+                            break
+                print(menu)
+                using = input("What are they buying? Please type the item spelled exactly as it appears on the menu.")
+                price = menu[using]
+                have = tokens[name]
+                if price > have:
+                    print("Can't afford that.")
+                else:
+                    print("It's a purchase!")
+                    tokens[name] -= price
+            elif choice == "casino":
+                if counter != 1:
+                    s_rate = ["Yes"]
+                    risk_taker = input("Who made the first move and decided to take a chance, entering the Survivor Casino?")
+                    if risk_taker not in tokens:
+                        while True:
+                            risk_taker = input("Who actually entered the Casino?")
+                            if risk_taker in tokens:
+                                break
+                    print(risk_taker, "has entered the Survivor Casino. The way this works is simple. Place a bet of fire tokens. You win, you earn that amount. You lose, lose your bet. Very simple.\n"
+                                      "If you want to try, place your bet. If not, type 0 and you won't bet a thing. The higher you bet, the higher the risk.")
+                    bet = int(input("What is your bet?"))
+                    amount = tokens[risk_taker]
+                    if bet > amount:
+                        print("Can't afford that.")
+                    else:
+                        for chance in range(bet):
+                            s_rate.append("No")
+                        game = random.choice(s_rate)
+                        if game == "Yes":
+                            print("Congrats, you win", bet, "tokens!")
+                            tokens[risk_taker] += bet
+                        elif game == "No":
+                            print("The risk has failed, you lose", bet, "tokens.")
+                            tokens[risk_taker] -= bet
+                    counter += 1
+                else:
+                    print("Sorry, the casino has been used today.")
+            elif choice == "done":
+                break
+    print(tokens)
+
+    print("Welcome to Tribal Council.")
+    print(merged_tribe)
+    if len(jury) > 0:
+        print("The Jury:", str(jury))
+    voters = int(input("How many people are voting?"))
+
+    tallies = []
+    vote_freq = {}
+    idols = []
+
+    idol = input("Did anyone get the idol?")
+    if idol == "yes":
+        num = int(input("How many people?"))
+        for idol in range(num):
+            receiver = input("Enter the name.")
+            if receiver not in merged_tribe:
+                while True:
+                    receiver = input("Enter the actual name.")
+                    if receiver in merged_tribe:
+                        break
+            idols.append(receiver)
+
+    for votes in range(voters):
+        vote = input("Write the name of the person you will vote out.")
+        if vote not in merged_tribe:
+            while True:
+                vote = input("Write the name of their actual vote.")
+                if vote == ch_winner:
+                    while True:
+                        vote = input("Write the name of their actual vote. (Can't vote someone who is immune.)")
+                        if vote != ch_winner:
+                            break
+                if vote in merged_tribe:
+                    break
+        elif vote == ch_winner:
+            while True:
+                vote = input("Write the name of their actual vote. (Can't vote someone who is immune.)")
+                if vote not in merged_tribe:
+                    while True:
+                        vote = input("Write the name of their actual vote.")
+                        if vote in merged_tribe:
+                            break
+                if vote != ch_winner:
+                    break
+        tallies.append(vote)
+
+    for choices in tallies:
+        if vote_freq.get(choices) == None:
+            vote_freq[choices] = 1
+        else:
+            vote_freq[choices] += 1
+
+    print(tallies)
+    print(vote_freq)
+    for ones in vote_freq:
+        votes_against[ones] += vote_freq[ones]
+
+    p_bootee = max(vote_freq, key=vote_freq.get)
+    if p_bootee in idols:
+        while True:
+            print("Any votes against", p_bootee, "will not count.")
+            del vote_freq[p_bootee]
+            idols.remove(p_bootee)
+            p_bootee = max(vote_freq, key=vote_freq.get)
+            if p_bootee not in idols:
+                break
+
+    print(vote_freq)
+    tie = []
+    for people in vote_freq:
+        if vote_freq[people] == vote_freq[p_bootee]:
+            tie.append(people)
+
+    if len(tie) > 1:
+        print("We have a tie.")
+        if len(tie) == 2:
+            tiebreaker = input("How do we want to break this? (rocks, fire, revote)")
+            if tiebreaker == "fire":
+                if len(tie) > 2:
+                    print("You can't do fire, you have more than two players in the tie.")
+                elif len(tie) == 2:
+                    print("Very well, the two of you shall do a trial by fire, first one to burn the rope wins.")
+                    fire_break = random.choice(tie)
+                    print(fire_break, "stays in the game.")
+                    tie.remove(fire_break)
+                    for other in tie:
+                        p_bootee = other
+        elif len(tie) > 2:
+            tiebreaker = input("How do we want to break this? (rocks or revote)")
+        if tiebreaker == "revote":
+            tallies = []
+            vote_freq = {}
+            voters = voters - len(tie)
+            for votes in range(voters):
+                vote = input("Write the name of the person you will vote out.")
+                if vote not in tokens:
+                    while True:
+                        vote = input("Write the name of their actual vote!")
+                        if vote in tokens:
+                            break
+                tallies.append(vote)
+
+            for choices in tallies:
+                if vote_freq.get(choices) == None:
+                    vote_freq[choices] = 1
+                else:
+                    vote_freq[choices] += 1
+
+            print(vote_freq)
+            p_bootee = max(vote_freq, key=vote_freq.get)
+
+            tie = []
+            for people in vote_freq:
+                if vote_freq[people] == vote_freq[p_bootee]:
+                    tie.append(people)
+
+            if len(tie) > 1:
+                print("And we're deadlocked.")
+                if len(tie) == 2:
+                    tiebreaker = input("Rocks or fire?")
+                    if tiebreaker == "rocks":
+                        vulnerable = []
+                        for thegamers in merged_tribe:
+                            vulnerable.append(thegamers)
+                        immunity_winner = input("Who won immunity?")
+                        if immunity_winner not in tokens:
+                            while True:
+                                immunity_winner = input("Who actually won immunity?")
+                                if immunity_winner in tokens:
+                                    break
+                        vulnerable.remove(immunity_winner)
+                        for tied_up in tie:
+                            vulnerable.remove(tied_up)
+
+                        p_bootee = random.choice(vulnerable)
+                        print(p_bootee, "you've picked the purple rock.")
+                    elif tiebreaker == "fire":
+                        print("Very well, the two of you shall do a trial by fire, first one to burn the rope wins.")
+                        fire_break = random.choice(tie)
+                        print(fire_break, "stays in the game.")
+                        tie.remove(fire_break)
+                        for other in tie:
+                            p_bootee = other
+                elif len(tie) > 2:
+                    vulnerable = []
+                    for thegamers in merged_tribe:
+                        vulnerable.append(thegamers)
+                    immunity_winner = input("Who won immunity?")
+                    if immunity_winner not in tokens:
+                        while True:
+                            immunity_winner = input("Who actually won immunity?")
+                            if immunity_winner in tokens:
+                                break
+                    vulnerable.remove(immunity_winner)
+                    for tied_up in tie:
+                        vulnerable.remove(tied_up)
+
+                    p_bootee = random.choice(vulnerable)
+                    print(p_bootee, "you've picked the purple rock.")
+        elif tiebreaker == "rocks":
+            vulnerable = []
+            for thegamers in merged_tribe:
+                vulnerable.append(thegamers)
+            immunity_winner = input("Who won immunity?")
+            if immunity_winner not in tokens:
+                while True:
+                    immunity_winner = input("Who actually won immunity?")
+                    if immunity_winner in tokens:
+                        break
+            vulnerable.remove(immunity_winner)
+            for tied_up in tie:
+                vulnerable.remove(tied_up)
+
+            p_bootee = random.choice(vulnerable)
+            print(p_bootee, "you've picked the purple rock.")
+
+    print(p_bootee + ",", "the tribe has spoken.")
+    jury.append(p_bootee)
+    merged_tribe.remove(p_bootee)
+    bootlist.append(p_bootee)
+
+    will_num = tokens[p_bootee]
+    tokens[p_bootee] -= will_num
+    bootlist.append(p_bootee)
+    del tokens[p_bootee]
+    print(tokens)
+    will = input("Who is the boot willing tokens to? 'Write it specifically how it was written originally'")
+    if will not in tokens:
+        while True:
+            will = input("Who are they actually willing tokens to?")
+            if will in tokens:
+                break
+    tokens[will] += will_num
+    counter = 0
+    tok_count = 0
+
+    return
+
+def finale():
+    print("Finalists:", str(merged_tribe))
+    print("The Jury:", str(jury))
+    voters = int(input("How many people are voting?"))
+    tallies = []
+    vote_freq = {}
+    for votes in range(voters):
+        vote = input("Write the name of the person you will vote to win.")
+        if vote not in merged_tribe:
+            while True:
+                vote = input("Write the name of the person you ACTUALLY vote to win.")
+                if vote in merged_tribe:
+                    break
+        tallies.append(vote)
+    for choices in tallies:
+        if vote_freq.get(choices) == None:
+            vote_freq[choices] = 1
+        else:
+            vote_freq[choices] += 1
+    print(tallies)
+    print(vote_freq)
+    p_winner = max(vote_freq, key=vote_freq.get)
+    tie = []
+    for people in vote_freq:
+        if vote_freq[people] == vote_freq[p_winner]:
+            tie.append(people)
+    if len(tie) > 1:
+        print("We have a tie.")
+        if len(tie) < len(merged_tribe):
+            print("The member of the tribe not involved in the tie will vote for the winner.")
+            p_winner = input("Who will you vote to win this game?")
+            if p_winner not in merged_tribe:
+                while True:
+                    p_winner = input("Who will you REALLY vote to win this game?")
+                    if p_winner in merged_tribe:
+                        break
+        elif len(tie) == len(merged_tribe):
+            print("In this case, the jury shall revote.")
+            tallies = []
+            vote_freq = {}
+            for votes in range(voters):
+                vote = input("Write the name of the person you will vote to win.")
+                if vote not in merged_tribe:
+                    while True:
+                        vote = input("Write the name of the person you ACTUALLY vote to win.")
+                        if vote in merged_tribe:
+                            break
+                tallies.append(vote)
+            for choices in tallies:
+                if vote_freq.get(choices) == None:
+                    vote_freq[choices] = 1
+                else:
+                    vote_freq[choices] += 1
+            print(tallies)
+            print(vote_freq)
+            p_winner = max(vote_freq, key=vote_freq.get)
+    for finalists in merged_tribe:
+        if finalists in vote_freq:
+            jury_votes[finalists] = vote_freq[finalists]
+        elif finalists not in vote_freq:
+            jury_votes[finalists] = 0
+    print("The winner of Survivor: Two Worlds,", p_winner)
+    return
+
+
+while True:
+    pre_merge(og_tribe1, og_tribe2, og_tribe1_name, og_tribe2_name, tribes, tokens)
+    swaps = input("Would you like to swap tribes?")
+    if swaps == "yes":
+        swap(og_tribe1, og_tribe2, tokens)
+    pre_merge(og_tribe3, og_tribe4, og_tribe3_name, og_tribe4_name, tribes2, tokens2)
+    swaps = input("Would you like to swap tribes?")
+    if swaps == "yes":
+        swap(og_tribe3, og_tribe4, tokens2)
+    unofficialmerge = input("Is it 'merge' time?")
+    if unofficialmerge == "yes":
+        print("Time for a 'merge'. However, this is no ordinary merge. You all have more players to go against.")
+        tokens.update(tokens2)
+        if len(og_tribe1) < len(og_tribe2):
+            og_tribe1_name = og_tribe2_name
+        elif len(og_tribe1) > len(og_tribe2):
+            og_tribe1_name = og_tribe1_name
+        if len(og_tribe3) > len(og_tribe4):
+            og_tribe2_name = og_tribe3_name
+        elif len(og_tribe4) > len(og_tribe3):
+            og_tribe2_name = og_tribe4_name
+        og_tribe1 = og_tribe1 + og_tribe2
+        og_tribe2 = og_tribe3 + og_tribe4
+        break
+while True:
+    tribes = [og_tribe1_name,og_tribe2_name]
+    pre_merge(og_tribe1, og_tribe2, og_tribe1_name, og_tribe2_name, tribes, tokens)
+    swaps = input("Would you like to swap tribes?")
+    if swaps == "yes":
+        swap(og_tribe1, og_tribe2, tokens)
+    merging = input("Would you like a real merge?")
+    if merging == "yes":
+        merged_tribe_name = input("What is the merged tribe's name?")
+        merged_tribe = og_tribe1 + og_tribe2
+        break
+while True:
+    merge()
+    finals = input("Is it time for the final tribal council?")
+    if finals == "yes":
+        break
+
+finale()
+print(challenge_wins)
+print(votes_against)
+print(jury_votes)
+boot_list()
+
+new_q = input("Do you want to save this season?")
+if new_q == "yes":
+    if os.path.isfile('seasons.txt'):
+        with open('seasons.txt','a') as file:
+            title = input("What was this season called?")
+            file.write(title)
+            file.write("\n")
+            file.write(str(bootlist))
+            file.write("\n")
+            file.write(str(challenge_wins))
+            file.write("\n")
+            file.write(str(votes_against))
+            file.write("\n")
+            file.write(str(jury_votes))
+            file.write("\n")
+    else:
+        with open('seasons.txt','w') as file:
+            title = input("What was this season called?")
+            file.write(title)
+            file.write("\n")
+            file.write(str(bootlist))
+            file.write("\n")
+            file.write(str(challenge_wins))
+            file.write("\n")
+            file.write(str(votes_against))
+            file.write("\n")
+            file.write(str(jury_votes))
+            file.write("\n")
