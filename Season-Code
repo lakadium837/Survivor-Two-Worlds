@@ -6,13 +6,13 @@
 import random
 import time
 import os.path
-players = []
-og_tribe1 = []
-og_tribe2 = []
-og_tribe3 = []
-og_tribe4 = []
+players = [20]
+og_tribe1 = [Airai]
+og_tribe2 = [Malakal]
+og_tribe3 = [Timbira]
+og_tribe4 = [Jalapao]
 messup = 0
-merged_tribe = []
+merged_tribe = [Kabengele]
 jury = []
 tokens = {}
 tokens2 = {}
